@@ -6,7 +6,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.errors import RequestValidationErrors
-from app.models import SimulateRequest, SimulateResponse
+from app.forecast import forecast
+from app.models import ForecastRequest, ForecastResponse, SimulateRequest, SimulateResponse
 from app.simulation import simulate
 
 app = FastAPI(
@@ -14,6 +15,7 @@ app = FastAPI(
     description=(
         "接收若干令牌桶与带时间戳的请求序列，按时间顺序模拟连续补充；"
         "仅当请求桶链上所有桶余额充足时原子扣减，否则全部保持不变。"
+        "另提供 /forecast：在不扣减状态的前提下，预测桶链首次同时满足成本所需的等待时间。"
     ),
     version="1.0.0",
 )
@@ -36,6 +38,7 @@ def root():
         "docs": "/docs",
         "health": "/health",
         "simulate": "/simulate",
+        "forecast": "/forecast",
     }
 
 
@@ -47,3 +50,8 @@ def health():
 @app.post("/simulate", response_model=SimulateResponse, tags=["simulation"])
 def simulate_endpoint(payload: SimulateRequest) -> SimulateResponse:
     return simulate(payload)
+
+
+@app.post("/forecast", response_model=ForecastResponse, tags=["forecast"])
+def forecast_endpoint(payload: ForecastRequest) -> ForecastResponse:
+    return forecast(payload)
